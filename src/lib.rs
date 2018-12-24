@@ -132,10 +132,10 @@ impl<'a, 'b> SessionRequestExt for Request<'a, 'b> {
     }
 }
 
-fn get_default_cookie(key: String, value: String) -> cookie::Cookie {
+fn get_default_cookie(key: String, value: String) -> cookie::Cookie<'static> {
     let mut rv = cookie::Cookie::new(key, value);
-    rv.httponly = true;
-    rv.path = Some("/".to_owned());
+    rv.set_http_only(true);
+    rv.set_path("/");
     rv
 }
 
