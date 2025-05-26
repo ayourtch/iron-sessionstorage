@@ -12,7 +12,7 @@ repository = "https://github.com/iron/iron-sessionstorage"
 homepage = "https://github.com/iron/iron-sessionstorage"
 
 [dependencies]
-iron = "0.6"
+iron = { git = "http://github.com/ayourtch/iron" }
 cookie = { version = "0.14", features = ["secure"] }
 error-chain = "0.11"
 rand = "0.4"
