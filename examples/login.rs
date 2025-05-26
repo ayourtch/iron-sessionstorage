@@ -1,25 +1,31 @@
-#[macro_use] extern crate iron;
+#[macro_use]
+extern crate iron;
 extern crate iron_sessionstorage;
-#[macro_use] extern crate router;
+#[macro_use]
+extern crate router;
 extern crate urlencoded;
 
+use iron::modifiers::Redirect;
 use iron::prelude::*;
 use iron::status;
-use iron::modifiers::Redirect;
 
+use iron_sessionstorage::backends::SignedCookieBackend;
 use iron_sessionstorage::traits::*;
 use iron_sessionstorage::SessionStorage;
-use iron_sessionstorage::backends::SignedCookieBackend;
 
 use urlencoded::UrlEncodedBody;
 
 struct Login {
-    username: String
+    username: String,
 }
 
 impl iron_sessionstorage::Value for Login {
-    fn get_key() -> &'static str { "logged_in_user" }
-    fn into_raw(self) -> String { self.username }
+    fn get_key() -> &'static str {
+        "logged_in_user"
+    }
+    fn into_raw(self) -> String {
+        self.username
+    }
     fn from_raw(value: String) -> Option<Self> {
         if value.is_empty() {
             None
@@ -32,17 +38,22 @@ impl iron_sessionstorage::Value for Login {
 fn login(req: &mut Request) -> IronResult<Response> {
     if try!(req.session().get::<Login>()).is_some() {
         // Already logged in
-        return Ok(Response::with((status::Found, Redirect(url_for!(req, "greet")))));
+        return Ok(Response::with((
+            status::Found,
+            Redirect(url_for!(req, "greet")),
+        )));
     }
 
     Ok(Response::with((
         status::Ok,
         "text/html".parse::<iron::mime::Mime>().unwrap(),
-        format!("This is an insecure demo, so which username do you want to log in as?<br/> \n\
+        format!(
+            "This is an insecure demo, so which username do you want to log in as?<br/> \n\
         <form method=post> \n\
         <input type=text name=username> \n\
         <input type=submit> \n\
-        </form>")
+        </form>"
+        ),
     )))
 }
 
@@ -53,12 +64,18 @@ fn login_post(req: &mut Request) -> IronResult<Response> {
     };
 
     try!(req.session().set(Login { username: username }));
-    Ok(Response::with((status::Found, Redirect(url_for!(req, "greet")))))
+    Ok(Response::with((
+        status::Found,
+        Redirect(url_for!(req, "greet")),
+    )))
 }
 
 fn logout(req: &mut Request) -> IronResult<Response> {
     try!(req.session().clear());
-    Ok(Response::with((status::Found, Redirect(url_for!(req, "greet")))))
+    Ok(Response::with((
+        status::Found,
+        Redirect(url_for!(req, "greet")),
+    )))
 }
 
 fn greet(req: &mut Request) -> IronResult<Response> {
@@ -74,10 +91,13 @@ fn greet(req: &mut Request) -> IronResult<Response> {
     Ok(Response::with((
         status::Ok,
         "text/html".parse::<iron::mime::Mime>().unwrap(),
-        format!("Hello, {}! <br/>\n\
+        format!(
+            "Hello, {}! <br/>\n\
         <form method=post action=/logout>\n\
         <input type=submit value='Log out' />\n\
-        </form>", login.username)
+        </form>",
+            login.username
+        ),
     )))
 }
 

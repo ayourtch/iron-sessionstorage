@@ -9,4 +9,3 @@ pub use self::signedcookie::SignedCookieBackend;
 mod redis;
 #[cfg(feature = "redis-backend")]
 pub use self::redis::RedisBackend;
-

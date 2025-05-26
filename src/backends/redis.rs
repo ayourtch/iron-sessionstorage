@@ -1,20 +1,20 @@
 use std::iter::FromIterator;
 
-use redis;
-use redis::Commands;
+use iron;
 use r2d2;
 use r2d2_redis::RedisConnectionManager;
-use iron;
 use rand;
 use rand::Rng;
+use redis;
+use redis::Commands;
 
+use get_default_cookie;
 use RawSession;
 use SessionBackend;
-use get_default_cookie;
 
+use cookie;
 use errors::*;
 use iron::prelude::*;
-use cookie;
 
 const COOKIE_NAME: &'static str = "iron_session_id";
 
@@ -63,15 +63,11 @@ pub struct RedisBackend {
 
 impl RedisBackend {
     pub fn new<T: redis::IntoConnectionInfo>(params: T) -> Result<Self> {
-        let manager = try!(
-            RedisConnectionManager::new(params)
-                .chain_err(|| "Couldn't create redis connection manager")
-        );
-        let pool = try!(
-            r2d2::Pool::builder()
-                .build(manager)
-                .chain_err(|| "Couldn't create redis connection pool")
-        );
+        let manager = try!(RedisConnectionManager::new(params)
+            .chain_err(|| "Couldn't create redis connection manager"));
+        let pool = try!(r2d2::Pool::builder()
+            .build(manager)
+            .chain_err(|| "Couldn't create redis connection pool"));
 
         Ok(RedisBackend { pool: pool })
     }
@@ -81,7 +77,8 @@ impl SessionBackend for RedisBackend {
     type S = RedisSession;
 
     fn from_request(&self, req: &mut Request) -> Self::S {
-        let session_id = req.headers
+        let session_id = req
+            .headers
             .get::<iron::headers::Cookie>()
             .map(|cookies| {
                 // FIXME: Our cookies are unsigned. Why do I need to specify a key?
