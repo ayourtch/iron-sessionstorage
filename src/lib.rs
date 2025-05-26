@@ -1,21 +1,14 @@
 extern crate cookie as _cookie;
-#[macro_use]
-extern crate error_chain;
-#[cfg(feature = "redis-backend")]
-#[macro_use]
-extern crate iron;
-#[cfg(not(feature = "redis-backend"))]
-extern crate iron;
-#[cfg(feature = "redis-backend")]
-extern crate r2d2;
-#[cfg(feature = "redis-backend")]
-extern crate r2d2_redis;
+#[macro_use] extern crate error_chain;
+#[cfg(feature = "redis-backend")] #[macro_use] extern crate iron;
+#[cfg(not(feature = "redis-backend"))] extern crate iron;
 extern crate rand;
-#[cfg(feature = "redis-backend")]
-extern crate redis;
+#[cfg(feature = "redis-backend")] extern crate redis;
+#[cfg(feature = "redis-backend")] extern crate r2d2;
+#[cfg(feature = "redis-backend")] extern crate r2d2_redis;
 
-use iron::middleware::{AroundMiddleware, Handler};
 use iron::prelude::*;
+use iron::middleware::{AroundMiddleware,Handler};
 use iron::typemap;
 
 pub mod backends;
@@ -43,36 +36,40 @@ pub trait SessionBackend: Send + Sync + 'static {
     fn from_request(&self, request: &mut Request) -> Self::S;
 }
 
+
 /// The most important type, the middleware you need to register.
 ///
 /// First parameter is a session backend, which determines how your session data is actually
 /// stored. Depending on whether you store your data clientside (signed cookies) or serverside
 /// (e.g. Redis and a session key) you're going to have different security properties.
 pub struct SessionStorage<B: SessionBackend> {
-    backend: B,
+    backend: B
 }
 
 impl<B: SessionBackend> SessionStorage<B> {
     pub fn new(backend: B) -> Self {
-        SessionStorage { backend: backend }
+        SessionStorage {
+            backend: backend
+        }
     }
 }
 
 /// The high-level interface you use to modify session data. You obtain this object with
 /// `request.session()`.
 pub struct Session {
-    inner: Box<dyn RawSession>,
+    inner: Box<RawSession>,
     has_changed: bool,
 }
 
 impl Session {
-    fn new(s: Box<dyn RawSession>) -> Self {
+    fn new(s: Box<RawSession>) -> Self {
         Session {
             inner: s,
-            has_changed: false,
+            has_changed: false
         }
     }
 }
+
 
 /// A typed interface to the string-to-string mapping. Each type represents a key, each instance of
 /// a type can be serialized into a value.
@@ -104,22 +101,19 @@ impl Session {
 }
 
 struct SessionKey;
-impl typemap::Key for SessionKey {
-    type Value = Session;
-}
+impl typemap::Key for SessionKey { type Value = Session; }
 
 impl<B: SessionBackend> AroundMiddleware for SessionStorage<B> {
-    fn around(self, handler: Box<dyn Handler>) -> Box<dyn Handler> {
+    fn around(self, handler: Box<Handler>) -> Box<Handler> {
         Box::new(move |req: &mut Request| -> IronResult<Response> {
             let s = self.backend.from_request(req);
-            req.extensions
-                .insert::<SessionKey>(Session::new(Box::new(s)));
+            req.extensions.insert::<SessionKey>(Session::new(Box::new(s)));
             let mut res = handler.handle(req);
             let s = req.extensions.remove::<SessionKey>().unwrap();
             if s.has_changed {
                 match res {
                     Ok(ref mut r) => try!(s.inner.write(r)),
-                    Err(ref mut e) => try!(s.inner.write(&mut e.response)),
+                    Err(ref mut e) => try!(s.inner.write(&mut e.response))
                 }
             };
             res
@@ -132,7 +126,7 @@ pub trait SessionRequestExt {
     fn session(&mut self) -> &mut Session;
 }
 
-impl<'a, 'b> SessionRequestExt for Request {
+impl<'a, 'b> SessionRequestExt for Request<'a, 'b> {
     fn session(&mut self) -> &mut Session {
         self.extensions.get_mut::<SessionKey>().unwrap()
     }
@@ -147,11 +141,12 @@ fn get_default_cookie(key: String, value: String) -> cookie::Cookie<'static> {
 
 /// A module with some important traits to star-import.
 pub mod traits {
-    pub use super::SessionRequestExt;
+    pub use super::{SessionRequestExt};
 }
 
 #[cfg(test)]
 mod tests {
     #[test]
-    fn it_works() {}
+    fn it_works() {
+    }
 }

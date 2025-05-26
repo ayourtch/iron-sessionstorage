@@ -12,6 +12,7 @@ repository = "https://github.com/iron/iron-sessionstorage"
 homepage = "https://github.com/iron/iron-sessionstorage"
 
 [dependencies]
+iron = { git = "http://github.com/ayourtch/iron" }
 cookie = { version = "0.14", features = ["secure"] }
 error-chain = "0.11"
 rand = "0.4"
@@ -23,9 +24,6 @@ r2d2 = { version = "0.8", optional = true }
 [features]
 redis-backend = ["redis", "r2d2_redis", "r2d2"]
 
-[dependencies.iron]
-git = "http://github.com/ayourtch/iron"
-
 [dev-dependencies]
-router = { git = "http://github.com/ayourtch/iron" }
-urlencoded = { git = "http://github.com/ayourtch/urlencoded" }
+router = "0.6.0"
+urlencoded = "0.6.0"
